@@ -29,12 +29,12 @@ public class DataBaseManagement extends SQLiteOpenHelper {
     }
 
 
-    public boolean addHistory(String item, String data, double price){
+    public boolean add(TransModel mo){
         SQLiteDatabase db = this.getReadableDatabase();
         ContentValues contentValues = new ContentValues();
-        contentValues.put(COL_NAME_ITEM, item);
-        contentValues.put(COL_NAME_DATE, data);
-        contentValues.put(COL_NAME_PRICE, price);
+        contentValues.put(COL_NAME_ITEM, mo.mItem);
+        contentValues.put(COL_NAME_DATE, mo.mDate);
+        contentValues.put(COL_NAME_PRICE, mo.mPrice);
         long result = db.insert(TABLE_NAME, null, contentValues);
         if (result == -1) {
             return false;

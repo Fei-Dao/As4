@@ -3,8 +3,11 @@ package com.example.as4;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.database.Cursor;
@@ -15,7 +18,7 @@ public class MainActivity extends AppCompatActivity {
     TextView balance;
     EditText Date, Price, Item;
     Button Add, Sub;
-    TextView history;
+    TableLayout history;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
         Item = (EditText) findViewById(R.id.Item);
         Add = (Button) findViewById(R.id.Add);
         Sub = (Button) findViewById(R.id.Sub);
-        history = (TextView) findViewById(R.id.history);
+        history = (TableLayout) findViewById(R.id.tableHistory);
         add();
         set();
     }
@@ -40,7 +43,11 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         double price = Double.parseDouble(Price.getText().toString());
-                        boolean result = DB.addHistory(Item.getText().toString(), Date.getText().toString(), price);
+                        TransModel mo = new TransModel();
+                        mo.mDate =  Date.getText().toString();
+                        mo.mItem = Item.getText().toString();
+                        mo.mPrice = price;
+                        boolean result = DB.add(mo);
                         if (result)
                             Toast.makeText(MainActivity.this, "Successfully Created", Toast.LENGTH_LONG).show();
                         else
@@ -58,7 +65,11 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         double price = -1 * Double.parseDouble(Price.getText().toString());
-                        boolean result = DB.addHistory(Item.getText().toString(), Date.getText().toString(), price);
+                        TransModel mo = new TransModel();
+                        mo.mDate =  Date.getText().toString();
+                        mo.mItem = Item.getText().toString();
+                        mo.mPrice = price;
+                        boolean result = DB.add(mo);
                         if (result)
                             Toast.makeText(MainActivity.this, "Successfully Created", Toast.LENGTH_LONG).show();
                         else
@@ -72,27 +83,47 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
-    public void set(){
+    public void set() {
+        clear();
         Cursor result = DB.pullData();
         StringBuffer str = new StringBuffer();
         Double balance = 0.0;
 
-        while(result.moveToNext()){
-            String priceString = result.getString(3);
+        while (result.moveToNext()) {
+            TableRow st = new TableRow(this);
+            TableRow.LayoutParams columnLayout = new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.WRAP_CONTENT);
+            columnLayout.weight = 1;
+
+            TextView date = new TextView(this);
+            date.setLayoutParams(columnLayout);
+            date.setText(result.getString(2));
+            st.addView(date);
+
+            TextView priceView = new TextView(this);
+            priceView.setLayoutParams(columnLayout);
+            priceView.setText(result.getString(3));
+            st.addView(priceView);
+
+            TextView item = new TextView(this);
+            item.setLayoutParams(columnLayout);
+            item.setText(result.getString(1));
+            st.addView(item);
+
+            history.addView(st, new TableLayout.LayoutParams(TableLayout.LayoutParams.MATCH_PARENT, TableLayout.LayoutParams.WRAP_CONTENT));
+
+
             double price = Double.parseDouble(result.getString(3));
             balance += price;
 
-            if (price < 0) {
-                str.append("Spent $");
-                priceString = priceString.substring(1);
-            }
-            else {
-                str.append("Added $");
-            }
-            str.append(priceString + " on " + result.getString(2)
-                    + " for " + result.getString(1) + "\n");
         }
         MainActivity.this.balance.setText("Current Balance: $" + balance);
-        MainActivity.this.history.setText(str);
     }
+    public void clear(){
+        int count = history.getChildCount();
+        for (int i = 1; i < count; i++) {
+            history.removeViewAt(1);
+        }
+    }
+
+
 }
